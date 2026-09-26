@@ -445,6 +445,15 @@ static int perform_transactional_update(const char *dir, const char *latest_tag)
 // Query this fork's latest release and update the installed twin binaries in place.
 static void check_and_perform_update(enum update_check_mode mode, const char *dir,
                                      int auto_update) {
+    // rai-ms fork: never download prebuilt binaries. Updates = rebuild from source with build.sh,
+    // which fetches Google's official binary and verifies its sha512.
+    if (mode == UPDATE_CHECK_EXPLICIT) {
+        printf("[agy-termux] Self-update is disabled in this fork. Rebuild instead:\n"
+               "  cd ~/antigravity-cli-termux && git pull && ./build.sh && ./install-local.sh\n");
+    }
+    (void)dir;
+    (void)auto_update;
+    return;
     char latest_tag[64] = {0};
     if (mode == UPDATE_CHECK_EXPLICIT) {
         printf("[agy-termux] Querying latest release from wallentx/antigravity-cli-termux...\n");

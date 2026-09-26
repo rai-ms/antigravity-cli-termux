@@ -132,6 +132,14 @@ else
   
   latest_version=$(echo "$manifest" | jq -r .version)
   download_url=$(echo "$manifest" | jq -r .url)
+  expected_sha512=$(echo "$manifest" | jq -r .sha512)
+  case "$download_url" in
+    https://storage.googleapis.com/antigravity-public/*) ;;
+    *) die "Refusing non-Google download URL from manifest: $download_url" ;;
+  esac
+  if [[ ! "$expected_sha512" =~ ^[0-9a-f]{128}$ ]]; then
+    die "Manifest did not include a valid sha512 checksum."
+  fi
   if [[ -z "$latest_version" || "$latest_version" == "null" ]]; then
     die "Manifest did not include a valid version."
   fi
@@ -145,6 +153,13 @@ else
     die "Failed to download upstream binary from $download_url"
   fi
   
+  info "Verifying sha512 of the official Google download..."
+  actual_sha512=$(sha512sum staging/agy.tar.gz | cut -d' ' -f1)
+  if [[ "$actual_sha512" != "$expected_sha512" ]]; then
+    die "Checksum mismatch for upstream binary (expected $expected_sha512, got $actual_sha512)"
+  fi
+  ok "Official binary checksum verified"
+
   info "Extracting upstream dynamic binary..."
   if ! tar -xzf staging/agy.tar.gz -C staging/; then
     die "Failed to extract upstream binary."
