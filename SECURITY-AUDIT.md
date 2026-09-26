@@ -16,3 +16,15 @@ Changes in this fork:
 
 Install: `pkg install glibc-repo && pkg install glibc clang jq python curl tar resolv-conf ca-certificates`,
 then `./build.sh && ./install-local.sh`.
+
+## Google Play build of Termux (termux.net repo)
+
+The Play build routes every exec through Android's system linker (libtermux-exec), so glibc
+binaries cannot start ("Could not find a PHDR"), and glibc packages are not in its repo.
+On those devices use proot-distro instead: the official, unpatched Google binary runs in an Ubuntu
+container. Install it from Google's manifest with the sha512 check (see `proot-install.sh`), then
+put a wrapper on PATH:
+
+    exec proot-distro login ubuntu --termux-home --shared-tmp --work-dir "$PWD" -- /usr/local/bin/agy "$@"
+
+CPUs without LSE atomics (e.g. Acer One 8, T4-82L) additionally need qemu-user-aarch64.
